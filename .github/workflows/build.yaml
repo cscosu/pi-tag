@@ -2,8 +2,8 @@ name: build
 permissions: write-all
 on: push
 jobs:
-  list:
-    name: List packer files
+  init:
+    name: Initialize
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -15,14 +15,6 @@ jobs:
         id: set-matrix
         run: |
           echo "matrix=$(find packer/ -type f -name "*.pkr.hcl" -printf '%f\n' | sed 's/\.pkr.hcl$//1' | jq -R -s -c 'split("\n")[:-1]'))" >> $GITHUB_OUTPUT
-
-  create-release:
-    name: Create release
-    needs: list
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
 
       - name: Get tag name
         id: tag-name
@@ -37,11 +29,11 @@ jobs:
 
   build:
     name: Build ${{ matrix.image }}
-    needs: [list, create-release]
+    needs: init
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ${{ fromJson(needs.list.outputs.matrix) }}
+        image: ${{ fromJson(needs.init.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -54,7 +46,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ needs.create-release.outputs.tagname }} *.img
+          gh release upload ${{ needs.init.outputs.tagname }} *.img
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
