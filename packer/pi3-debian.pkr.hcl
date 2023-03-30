@@ -1,4 +1,4 @@
-source "arm" "raspios" {
+source "arm" "debian" {
   file_urls             = ["https://raspi.debian.net/tested/20230102_raspi_3_bookworm.img.xz"]
   file_checksum_url     = "https://raspi.debian.net/tested/20230102_raspi_3_bookworm.img.xz.sha256"
   file_checksum_type    = "sha256"
@@ -34,7 +34,7 @@ source "arm" "raspios" {
 }
 
 build {
-  sources = ["source.arm.raspios"]
+  sources = ["source.arm.debian"]
 
   provisioner "shell" {
     inline = [
