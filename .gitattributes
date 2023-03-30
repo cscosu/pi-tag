@@ -1,4 +1,1 @@
-*.yml linguist-detectable=true
-*.yml linguist-language=YAML
-*.yaml linguist-detectable=true
-*.yaml linguist-language=YAML
+.github/workflows/*.yaml linguist-detectable=true
