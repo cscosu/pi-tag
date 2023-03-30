@@ -33,6 +33,7 @@ jobs:
     needs: init
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         image: ${{ fromJson(needs.init.outputs.matrix) }}
     steps:
