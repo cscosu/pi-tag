@@ -10,7 +10,7 @@ jobs:
 
       - id: set-matrix
         run: |
-          echo "matrix=$(find packer/ -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | jq -R -s -c 'split("\n")[:-1]'))" >> $GITHUB_OUTPUT
+          echo "matrix=$(find packer/ -type f -name "*.pkr.hcl" -printf '%f\n' | jq -R -s -c 'split("\n")[:-1]'))" >> $GITHUB_OUTPUT
   build:
     needs: list
     runs-on: ubuntu-latest
