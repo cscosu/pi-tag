@@ -2,11 +2,12 @@ name: build
 permissions: write-all
 on: push
 jobs:
-  list:
-    name: List packer files
+  init:
+    name: Initialize
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      tagname: ${{ steps.tag-name.outputs.tagname }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -14,15 +15,7 @@ jobs:
       - name: List packer files
         id: set-matrix
         run: |
-          echo "matrix=$(find packer/ -type f -name "*.pkr.hcl" -printf '%f\n' | sed 's/\.pkr.hcl$//1' | jq -R -s -c 'split("\n")[:-1]'))" >> $GITHUB_OUTPUT
-
-  create-release:
-    name: Create release
-    needs: list
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+          echo "matrix=$(find packer/ -type f -name '*.pkr.hcl' -printf '%f\n' | sed 's/\.pkr.hcl$//1' | jq -R -s -c 'split("\n")[:-1]'))" >> $GITHUB_OUTPUT
 
       - name: Get tag name
         id: tag-name
@@ -33,15 +26,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ steps.tag-name.outputs.tagname }} -t "Packer images" -n "Release ${{ steps.tag-name.outputs.tagname }}"
+          gh release create ${{ steps.tag-name.outputs.tagname }} -t "Packer images" -n "Packer generated images (${{ steps.tag-name.outputs.tagname }})"
 
   build:
     name: Build ${{ matrix.image }}
-    needs: [list, create-release]
+    needs: init
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ${{ fromJson(needs.list.outputs.matrix) }}
+        image: ${{ fromJson(needs.init.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -54,7 +47,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ needs.create-release.outputs.tagname }} *.img
+          gh release upload ${{ needs.init.outputs.tagname }} $(find -type f -name '*.img')
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
