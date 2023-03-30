@@ -1,0 +1,40 @@
+name: build
+on: push
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: set-matrix
+        run: |
+          echo "matrix=$(find packer/ -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | jq -R -s -c 'split("\n")[:-1]'))" >> $GITHUB_OUTPUT
+  build:
+    needs: list
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ${{ fromJson(needs.list.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Packer build
+        run: |
+          docker run --rm --privileged -v /dev:/dev -v $PWD:/build mkaczanowski/packer-builder-arm:latest build packer/${{ matrix.image }}
+
+      - name: Get short SHA
+        id: short-sha
+        run: |
+          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/*
+          file_glob: true
+          tag: ${{ github.ref }}-${{ steps.short-sha.outputs.sha }}
+          overwrite: true
+          body: |
+            Packer images
