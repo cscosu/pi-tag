@@ -3,30 +3,49 @@ permissions: write-all
 on: push
 jobs:
   list:
+    name: List packer files
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - id: set-matrix
+      - name: List packer files
+        id: set-matrix
         run: |
-          echo "matrix=$(find packer/ -type f -name "*.pkr.hcl" -printf '%f\n' | jq -R -s -c 'split("\n")[:-1]'))" >> $GITHUB_OUTPUT
+          echo "matrix=$(find packer/ -type f -name "*.pkr.hcl" -printf '%f\n' | sed 's/\.pkr.hcl$//1' | jq -R -s -c 'split("\n")[:-1]'))" >> $GITHUB_OUTPUT
 
   build:
+    name: Build ${{ matrix.image }}
     needs: list
     runs-on: ubuntu-latest
     strategy:
       matrix:
         image: ${{ fromJson(needs.list.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Packer build
         run: |
-          docker run --rm --privileged -v /dev:/dev -v $PWD:/build mkaczanowski/packer-builder-arm:latest build packer/${{ matrix.image }}
+          docker run --rm --privileged -v /dev:/dev -v $PWD:/build mkaczanowski/packer-builder-arm:latest build packer/${{ matrix.image }}.pkr.hcl
 
-      - name: Get short SHA
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifact-${{ matrix.image }}
+          path: "*.img"
+
+  release:
+    name: Release all images
+    needs: [build, list]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Get short hash
         id: short-sha
         run: |
           echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
@@ -34,7 +53,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "*.img"
+          file: "artifact-*/*"
           file_glob: true
           tag: ${{ github.ref }}-${{ steps.short-sha.outputs.sha }}
           overwrite: true
