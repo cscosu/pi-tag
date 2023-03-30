@@ -39,7 +39,7 @@ build {
   provisioner "shell" {
     inline = [
       "apt-get update",
-      "apt-get upgrade",
+      "DEBIAN_FRONTEND=noninteractive apt-get upgrade -y",
       "touch /tmp/test",
       "echo 'test' > /tmp/test",
     ]
