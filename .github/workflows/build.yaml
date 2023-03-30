@@ -16,9 +16,28 @@ jobs:
         run: |
           echo "matrix=$(find packer/ -type f -name "*.pkr.hcl" -printf '%f\n' | sed 's/\.pkr.hcl$//1' | jq -R -s -c 'split("\n")[:-1]'))" >> $GITHUB_OUTPUT
 
+  create-release:
+    name: Create release
+    needs: list
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Get short hash
+        id: short-sha
+        run: |
+          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref }}-${{ steps.short-sha.outputs.sha }} -t "Packer images" -n "Release ${{ github.ref }}-${{ steps.short-sha.outputs.sha }}"
+
   build:
     name: Build ${{ matrix.image }}
-    needs: list
+    needs: [list, create-release]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -31,31 +50,14 @@ jobs:
         run: |
           docker run --rm --privileged -v /dev:/dev -v $PWD:/build mkaczanowski/packer-builder-arm:latest build packer/${{ matrix.image }}.pkr.hcl
 
+      - name: Upload release asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.ref }}-${{ steps.short-sha.outputs.sha }} *.img
+
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: artifact-${{ matrix.image }}
+          name: "*.img"
           path: "*.img"
-
-  release:
-    name: Release all images
-    needs: [build, list]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-
-      - name: Get short hash
-        id: short-sha
-        run: |
-          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
-      - uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "artifact-*/*"
-          file_glob: true
-          tag: ${{ github.ref }}-${{ steps.short-sha.outputs.sha }}
-          overwrite: true
-          body: |
-            Packer generated images for tag
