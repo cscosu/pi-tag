@@ -10,7 +10,7 @@ source "arm" "raspios" {
     filesystem   = "vfat"
     mountpoint   = "/boot"
     size         = "256M"
-    start_sector = 8192
+    start_sector = 8 * 1024
     type         = "c"
   }
 
@@ -19,14 +19,14 @@ source "arm" "raspios" {
     filesystem   = "ext4"
     mountpoint   = "/"
     size         = 0
-    start_sector = 532480
+    start_sector = (8 + 512) * 1024
     type         = 83
   }
 
   image_path         = "pi3-raspios-arm64.img"
-  image_size         = "2G"
+  image_size         = "3G"
   image_type         = "dos"
-  image_build_method = "reuse"
+  image_build_method = "resize"
   image_chroot_env   = ["PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"]
 
   qemu_binary_destination_path = "/usr/bin/qemu-aarch64-static"
@@ -38,10 +38,11 @@ build {
 
   provisioner "shell" {
     inline = [
+      "useradd tag",
+      "echo tag:tag | chpasswd",
       "apt-get update",
       "DEBIAN_FRONTEND=noninteractive apt-get upgrade -y",
-      "touch /tmp/test",
-      "echo 'test' > /tmp/test",
+      "DEBIAN_FRONTEND=noninteractive apt-get install -y xfce4",
     ]
   }
 }
