@@ -2,3 +2,4 @@
 .packer_plugins
 
 *.img
+*.img.zip

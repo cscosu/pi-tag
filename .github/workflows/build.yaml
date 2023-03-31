@@ -40,12 +40,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Packer build
+      - name: Packer build image
+        id: build
         run: |
           docker run --rm --privileged -v /dev:/dev -v $PWD:/build mkaczanowski/packer-builder-arm:latest build packer/${{ matrix.image }}.pkr.hcl
+          echo "image=$(find -type f -name '*.img')" >> $GITHUB_OUTPUT
+
+      - name: Compress image
+        run: |
+          zip ${{ steps.build.outputs.image }}.zip ${{ steps.build.outputs.image }}
 
       - name: Upload release asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ needs.init.outputs.tagname }} $(find -type f -name '*.img')
+          gh release upload ${{ needs.init.outputs.tagname }} ${{ steps.build.outputs.image }}.zip
