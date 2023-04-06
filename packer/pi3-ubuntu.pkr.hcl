@@ -1,6 +1,7 @@
-source "arm" "debian" {
-  file_urls             = ["https://raspi.debian.net/tested/20230102_raspi_3_bookworm.img.xz"]
-  file_checksum_url     = "https://raspi.debian.net/tested/20230102_raspi_3_bookworm.img.xz.sha256"
+
+source "arm" "ubuntu" {
+  file_urls             = ["https://cdimage.ubuntu.com/ubuntu/releases/22.04/release/ubuntu-22.04.2-preinstalled-server-arm64+raspi.img.xz"]
+  file_checksum_url     = "https://cdimage.ubuntu.com/ubuntu/releases/22.04/release/SHA256SUMS"
   file_checksum_type    = "sha256"
   file_target_extension = "xz"
   file_unarchive_cmd    = ["xz", "--decompress", "$ARCHIVE_PATH"]
@@ -9,8 +10,8 @@ source "arm" "debian" {
     name         = "boot"
     filesystem   = "vfat"
     mountpoint   = "/boot"
-    size         = "508M"
-    start_sector = "8192"
+    size         = "256M"
+    start_sector = "2048"
     type         = "c"
   }
 
@@ -19,11 +20,11 @@ source "arm" "debian" {
     filesystem   = "ext4"
     mountpoint   = "/"
     size         = "0"
-    start_sector = "1048576"
+    start_sector = "526336"
     type         = "83"
   }
 
-  image_path         = "pi3-debian-arm64.img"
+  image_path         = "pi3-ubuntu-arm64.img"
   image_size         = "2G"
   image_type         = "dos"
   image_build_method = "reuse"
@@ -34,7 +35,7 @@ source "arm" "debian" {
 }
 
 build {
-  sources = ["source.arm.debian"]
+  sources = ["source.arm.ubuntu"]
 
   provisioner "shell" {
     inline = [

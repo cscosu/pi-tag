@@ -10,7 +10,7 @@ source "arm" "raspios" {
     filesystem   = "vfat"
     mountpoint   = "/boot"
     size         = "256M"
-    start_sector = 8 * 1024
+    start_sector = "8192"
     type         = "c"
   }
 
@@ -18,13 +18,13 @@ source "arm" "raspios" {
     name         = "root"
     filesystem   = "ext4"
     mountpoint   = "/"
-    size         = 0
-    start_sector = (8 + 512) * 1024
-    type         = 83
+    size         = "0"
+    start_sector = "532480"
+    type         = "83"
   }
 
   image_path         = "pi3-raspios-arm64.img"
-  image_size         = "3G"
+  image_size         = "2G"
   image_type         = "dos"
   image_build_method = "resize"
   image_chroot_env   = ["PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"]
