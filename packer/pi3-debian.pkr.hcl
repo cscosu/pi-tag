@@ -1,6 +1,6 @@
-source "arm" "raspios" {
-  file_urls             = ["https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2023-02-22/2023-02-21-raspios-bullseye-arm64-lite.img.xz"]
-  file_checksum_url     = "https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2023-02-22/2023-02-21-raspios-bullseye-arm64-lite.img.xz.sha256"
+source "arm" "debian" {
+  file_urls             = ["https://raspi.debian.net/tested/20230102_raspi_3_bookworm.img.xz"]
+  file_checksum_url     = "https://raspi.debian.net/tested/20230102_raspi_3_bookworm.img.xz.sha256"
   file_checksum_type    = "sha256"
   file_target_extension = "xz"
   file_unarchive_cmd    = ["xz", "--decompress", "$ARCHIVE_PATH"]
@@ -23,10 +23,10 @@ source "arm" "raspios" {
     type         = 83
   }
 
-  image_path         = "pi3-raspios-arm64.img"
-  image_size         = "3G"
+  image_path         = "pi3-debian-arm64.img"
+  image_size         = "2G"
   image_type         = "dos"
-  image_build_method = "resize"
+  image_build_method = "new"
   image_chroot_env   = ["PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"]
 
   qemu_binary_destination_path = "/usr/bin/qemu-aarch64-static"
@@ -34,10 +34,11 @@ source "arm" "raspios" {
 }
 
 build {
-  sources = ["source.arm.raspios"]
+  sources = ["source.arm.debian"]
 
   provisioner "shell" {
     inline = [
+      "echo 'nameserver 1.1.1.1' > /etc/resolv.conf",
       "hostname tag",
       "echo 'KEYMAP=us' > /etc/vconsole.conf",
       "userdel -rf pi",
