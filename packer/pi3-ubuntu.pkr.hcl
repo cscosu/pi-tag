@@ -39,6 +39,11 @@ build {
 
   provisioner "shell" {
     inline = [
+      //   "mkdir /etc/systemd/resolved.conf.d/",
+      //   "echo '[Resolve]' > /etc/systemd/resolved.conf.d/dns_servers.conf",
+      //   "echo 'DNS=1.1.1.1' >> /etc/systemd/resolved.conf.d/dns_servers.conf",
+      //   "echo 'DOMAINS=~.' >> /etc/systemd/resolved.conf.d/dns_servers.conf",
+      //   "systemctl restart systemd-resolved",
       "hostname tag",
       "useradd -m tag",
       "usermod -aG sudo tag",

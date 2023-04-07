@@ -24,7 +24,7 @@ source "arm" "raspios" {
   }
 
   image_path         = "pi3-raspios-arm64.img"
-  image_size         = "2G"
+  image_size         = "3G"
   image_type         = "dos"
   image_build_method = "resize"
   image_chroot_env   = ["PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"]

@@ -24,9 +24,10 @@ source "arm" "debian" {
   }
 
   image_path         = "pi3-debian-arm64.img"
-  image_size         = "2G"
+  image_size         = "4G"
   image_type         = "dos"
-  image_build_method = "reuse"
+  image_build_method = "new"
+  image_mount_path   = "/tmp/packer-${uuidv4()}"
   image_chroot_env   = ["PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"]
 
   qemu_binary_destination_path = "/usr/bin/qemu-aarch64-static"
@@ -38,13 +39,15 @@ build {
 
   provisioner "shell" {
     inline = [
+      "echo 'nameserver 1.1.1.1' > /etc/resolv.conf",
       "hostname tag",
       "useradd -m tag",
       "usermod -aG sudo tag",
       "echo tag:tag | chpasswd",
       "echo root:root | chpasswd",
-      "apt-get update",
-      "DEBIAN_FRONTEND=noninteractive apt-get upgrade -y",
+      // "apt-mark hold initramfs-tools",
+      // "DEBIAN_FRONTEND=noninteractive apt-get update && apt-get upgrade -y", // apt-get auto-remove && apt-get clean && 
+      "DEBIAN_FRONTEND=noninteractive apt-get update",
       "DEBIAN_FRONTEND=noninteractive apt-get install -y xfce4",
     ]
   }
